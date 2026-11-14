@@ -56,6 +56,7 @@ contract MezoTierVault is IAllocationSource, ReentrancyGuard, Ownable {
     error SaleNotSettled();
     error InvalidCapParams();
     error FeeOnTransferToken();
+    error ZeroAddress();
 
     constructor(
         IERC20 mezo_,
@@ -66,6 +67,7 @@ contract MezoTierVault is IAllocationSource, ReentrancyGuard, Ownable {
         uint256 capPerMezo_,
         uint256 maxCap_
     ) Ownable(owner_) {
+        if (address(mezo_) == address(0) || factory_ == address(0)) revert ZeroAddress();
         mezo = mezo_;
         factory = factory_;
         absoluteMaxCap = absoluteMaxCap_;

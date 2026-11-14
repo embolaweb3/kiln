@@ -78,8 +78,12 @@ contract KilnFactory is ReentrancyGuard {
     error FirstTrancheTooHigh();
     error VetoThresholdOutOfBounds();
     error FeeOnTransferToken();
+    error ZeroAddress();
 
     constructor(IERC20 raiseToken_, IERC20 bondToken_, MezoTierVault vault_, Bounds memory b) {
+        if (address(raiseToken_) == address(0) || address(bondToken_) == address(0) || address(vault_) == address(0)) {
+            revert ZeroAddress();
+        }
         if (
             b.minBond == 0 || b.minDuration == 0 || b.minDuration > b.maxDuration || b.minTimelock == 0
                 || b.minTimelock > b.maxTimelock || b.minSoftCapBps == 0 || b.minSoftCapBps > BPS

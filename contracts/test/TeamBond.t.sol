@@ -38,6 +38,13 @@ contract TeamBondTest is Test {
         bond.deposit(address(sale), team, BOND);
     }
 
+    function test_constructorRejectsZeroAddresses() public {
+        vm.expectRevert(TeamBond.ZeroAddress.selector);
+        new TeamBond(mezo, address(0));
+        vm.expectRevert(TeamBond.ZeroAddress.selector);
+        new TeamBond(MockERC20(address(0)), factory);
+    }
+
     function test_depositEmitsAndHolds() public {
         vm.expectEmit(true, true, false, true);
         emit BondDeposited(address(sale), team, BOND);

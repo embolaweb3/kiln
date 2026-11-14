@@ -5,6 +5,9 @@ import {SaleBase} from "./SaleBase.sol";
 import {Sale} from "../src/Sale.sol";
 import {TeamBond} from "../src/TeamBond.sol";
 import {FeeToken} from "./mocks/FeeToken.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IAllocationSource} from "../src/interfaces/IAllocationSource.sol";
+import {ITeamBond} from "../src/interfaces/ITeamBond.sol";
 
 contract SaleTest is SaleBase {
     event Contributed(address indexed wallet, uint256 amount, uint256 walletTotal, uint256 totalRaised);
@@ -35,6 +38,14 @@ contract SaleTest is SaleBase {
         Sale.Params memory q;
 
         q = p; q.team = address(0);
+        vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);
+        q = p; q.saleToken = IERC20(address(0));
+        vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);
+        q = p; q.raiseToken = IERC20(address(0));
+        vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);
+        q = p; q.allocation = IAllocationSource(address(0));
+        vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);
+        q = p; q.bond = ITeamBond(address(0));
         vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);
         q = p; q.price = 0;
         vm.expectRevert(Sale.InvalidParams.selector); new Sale(q);

@@ -56,6 +56,13 @@ contract MezoTierVaultTest is Test {
         new MezoTierVault(mezo, factory, owner, ABS_MAX, MAX + 1, PER_MEZO, MAX);
     }
 
+    function test_constructorRejectsZeroAddresses() public {
+        vm.expectRevert(MezoTierVault.ZeroAddress.selector);
+        new MezoTierVault(mezo, address(0), owner, ABS_MAX, BASE, PER_MEZO, MAX);
+        vm.expectRevert(MezoTierVault.ZeroAddress.selector);
+        new MezoTierVault(MockERC20(address(0)), factory, owner, ABS_MAX, BASE, PER_MEZO, MAX);
+    }
+
     function test_stakeEmitsAndRaisesCap() public {
         vm.expectEmit(true, false, false, true);
         emit Staked(alice, 100e18, 100e18);

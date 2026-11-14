@@ -118,7 +118,8 @@ contract Sale is ISale, ReentrancyGuard {
 
     constructor(Params memory p) {
         if (
-            p.team == address(0) || p.price == 0 || p.softCap == 0 || p.softCap > p.hardCap || p.start >= p.end
+            p.team == address(0) || address(p.saleToken) == address(0) || address(p.raiseToken) == address(0)
+                || address(p.allocation) == address(0) || address(p.bond) == address(0) || p.price == 0 || p.softCap == 0 || p.softCap > p.hardCap || p.start >= p.end
                 || p.firstTrancheBps >= BPS || p.vetoBps == 0 || p.vetoBps > BPS || p.timelock == 0
                 || address(p.saleToken) == address(p.raiseToken)
         ) revert InvalidParams();

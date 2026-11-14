@@ -131,6 +131,15 @@ contract KilnFactoryTest is Test {
         new KilnFactory(musd, mezo, vault, x);
     }
 
+    function test_constructorRejectsZeroAddresses() public {
+        vm.expectRevert(KilnFactory.ZeroAddress.selector);
+        new KilnFactory(MockERC20(address(0)), mezo, vault, b);
+        vm.expectRevert(KilnFactory.ZeroAddress.selector);
+        new KilnFactory(musd, MockERC20(address(0)), vault, b);
+        vm.expectRevert(KilnFactory.ZeroAddress.selector);
+        new KilnFactory(musd, mezo, MezoTierVault(address(0)), b);
+    }
+
     function test_bondBelowMinReverts() public {
         KilnFactory.SaleConfig memory c = _cfg();
         c.bondAmount = 499e18;

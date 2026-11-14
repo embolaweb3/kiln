@@ -50,8 +50,10 @@ contract TeamBond is ITeamBond, ReentrancyGuard {
     error AlreadyClaimed();
     error NothingToClaim();
     error FeeOnTransferToken();
+    error ZeroAddress();
 
     constructor(IERC20 bondToken_, address factory_) {
+        if (address(bondToken_) == address(0) || factory_ == address(0)) revert ZeroAddress();
         bondToken = bondToken_;
         factory = factory_;
     }
