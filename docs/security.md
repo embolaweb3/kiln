@@ -26,9 +26,23 @@ Re-run after the fix: only the `timestamp` detector remains.
 
 The invariant suite was mutation-checked: removing the lock call, the wallet cap check, the unstake lock, the timelock check or the refund accounting each made at least one invariant fail.
 
+## Known issues
+
+### Veto can be profitable for a holder at the threshold
+
+Status: known, accepted for the testnet build. Design unchanged.
+
+A passed veto refunds the unreleased MUSD pro rata and slashes the bond to contributors, but it does not touch sale tokens. Tokens are claimable straight after finalize, so contributors keep what they already claimed or can still claim. A contributor, or a group, holding the veto threshold can therefore pay nothing to veto and walk away with the full token allocation for only the released share of the price, plus a share of the bond. This is most attractive when the token trades above the sale price.
+
+Impact: a team can lose the remainder of the raise and its bond to a veto that was not about team quality. Contributors' funds are not at risk.
+
+Mitigations in place: the veto threshold is set per sale inside the factory bounds, and the bond is the team's stake in that outcome.
+
+Planned fix: hold token claims until the timelock ends. After a veto, contributors would then claim tokens only for the share of their contribution that was released, and the team would take back the rest. This removes the incentive without changing who can veto. It is not in this build.
+
 ## Design decisions to know about
 
-- **A passed veto does not claw back tokens.** Contributors keep the sale tokens they can already claim and get the unreleased MUSD back pro rata, plus the slashed bond. Tokens are claimable straight after finalize, so there is nothing to claw back. A holder at the veto threshold therefore pays nothing to veto when the token trades above the sale price. The threshold is set per sale inside the factory bounds, and the bond is the team's compensation for that risk. If this is not wanted, token claims would have to wait for the timelock.
+- **Known issue: a veto can be profitable (see below).**
 - **Sale-token price rounding.** Tokens owed are `floor(contribution * unit / price)`. The sum of per-wallet floors never exceeds the floor of the total, so the sale can always pay every claim. Dust stays in the sale.
 - **Maximum sale duration.** The factory also enforces a `maxDuration`, which was not in the brief. Without it a team could set a far-future end and hold contributors' stake locked.
 - **Stake unlock is lazy.** `MezoTierVault.unlock(sale, wallet)` is public and permissionless once the sale is finalized or failed. A user who contributed must call it (or anyone can for them) before `unstake`.
