@@ -1,0 +1,59 @@
+{
+  "tx": "https://explorer.test.mezo.org/tx/0x5526ba41ecbf9a85cfcaf2e45f88cced4203aaedffcba57c94d810d4a6b81e9b",
+  "hash": "0x5526ba41ecbf9a85cfcaf2e45f88cced4203aaedffcba57c94d810d4a6b81e9b",
+  "status": "success",
+  "gasUsed": "596067",
+  "block": "16783124",
+  "requestedDebt": "1800000000000000000000",
+  "hints": {
+    "upper": "0x180EdA895DFEECb66d3779253D62e36CE3F22da5",
+    "lower": "0x9bfD25e1658923804EBFE471993Bba7Bbf0E23CA"
+  },
+  "collateralSent": "46531594888773617",
+  "priceAtOpen": "64530347760000000000000",
+  "musdReceived": "1800000000000000000000",
+  "pcvMusdDelta": "5329656725069677127",
+  "btcSpentIncludingGas": "46531594975799399",
+  "events": [
+    {
+      "name": "TroveCreated",
+      "args": {
+        "_borrower": "0x135198b57a68A0614546572Db7c40F3Fa6Aace6E",
+        "arrayIndex": "336"
+      }
+    },
+    {
+      "name": "TroveUpdated",
+      "args": {
+        "_borrower": "0x135198b57a68A0614546572Db7c40F3Fa6Aace6E",
+        "_principal": "2001800000000000000000",
+        "_interest": "0",
+        "_coll": "46531594888773617",
+        "_stake": "46531594888773617",
+        "_interestRate": 100,
+        "_lastInterestUpdateTime": "1794691777",
+        "_operation": 0
+      }
+    },
+    {
+      "name": "BorrowingFeePaid",
+      "args": {
+        "_borrower": "0x135198b57a68A0614546572Db7c40F3Fa6Aace6E",
+        "_fee": "1800000000000000000"
+      }
+    }
+  ],
+  "position": {
+    "status": "active",
+    "collateral": "46531594888773617",
+    "debt": "2001800000000000000000",
+    "principal": "2001800000000000000000",
+    "interest": "0",
+    "interestRateBps": 100,
+    "price": "64519510190000000000000",
+    "icr": "1499748080592020909",
+    "liquidationPrice": "47322255023999999607215",
+    "liquidationDistance": "266543486076641593",
+    "repayToClose": "1801800000000000000000"
+  }
+}
