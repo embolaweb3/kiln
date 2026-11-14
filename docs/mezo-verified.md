@@ -77,3 +77,121 @@ Steps 9 and 10 failed on the first run with a generic RPC error (`Missing or inv
 
 - Whether `transferFrom` pulls from a **smart-account** owner (Passport users) behaves the same. Not tested.
 - Get MEZO for demo wallets: see section C (to be written). The Router swap in steps 1 and 2 is a working route, but the MUSD/MEZO pool is thin (about 30 MUSD, 214 MEZO at last read), so 44 MEZO moved the price noticeably.
+
+---
+
+## B. Opening a trove (normal `BorrowerOperations.openTrove`)
+
+Signed by the test wallet `0x135198b57a68A0614546572Db7c40F3Fa6Aace6E`, plain transaction, no signature route.
+Tx: [0x5526ba…](https://explorer.test.mezo.org/tx/0x5526ba41ecbf9a85cfcaf2e45f88cced4203aaedffcba57c94d810d4a6b81e9b), block 16783124, 596,067 gas. Raw data: `scripts/results/trove-open.json`, script `13-open-trove.ts`.
+
+| Item | Observed |
+|---|---|
+| Requested debt | 1,800 MUSD |
+| Borrowing fee (`BorrowingFeePaid` event) | **1.8 MUSD** (0.1%, `borrowingRate()` = 1e15) |
+| Gas compensation | **200 MUSD** (constant `MUSD_GAS_COMPENSATION`) |
+| Composite debt (`TroveUpdated._principal` on open) | **2,001.8 MUSD** = 1,800 + 1.8 + 200 |
+| **MUSD received by the borrower** | **exactly 1,800 MUSD** (balance delta). The fee is minted to PCV, the 200 goes to the Gas Pool. |
+| Collateral sent | 0.046531594888773617 BTC (`msg.value`, native BTC) |
+| Interest rate on the trove | 100 bps (1%), fixed at open |
+| ICR at open price ($64,530.35) | 150.0% by construction. Read back minutes later at 149.97% because the oracle price moved. |
+| Cost of the transaction in BTC | 8.7e-8 BTC (about 146 wei per gas) |
+| Hints | `HintHelpers.getApproxHint` then `SortedTroves.findInsertPosition` worked unchanged (`getHints` in `lib/position.ts`) |
+
+### Is the 1,800 MUSD minimum still right?
+
+**Yes, but it means something slightly different from "1,800 principal".**
+
+- `minNetDebt()` = 1,800 MUSD live. Net debt is **requested amount plus the 0.1% fee**, checked before the 200 gas compensation is added.
+- Smallest request that opens: **1,798.201798201798201799 MUSD**. One wei less reverts with `BorrowerOps: Trove's net debt must be greater than minimum` (dry run, `03-simulate-open.ts`, plus the same revert string seen live).
+- The minimum composite debt is therefore **2,000 MUSD**, and the borrower receives **about 1,798.2 MUSD**, not 1,800. Mezo's docs ("1,800 principal + 200 gas") ignore the fee.
+- Collateral needed for the minimum trove, at the oracle price: 0.0610 BTC for 200% ICR, 0.0458 BTC for 150% at $65.6k. These move with the price.
+
+### Differences from the research doc
+
+| Research doc | Observed |
+|---|---|
+| "Net debt is the requested amount plus the fee." | Confirmed, and the 1,800 floor applies to that sum. |
+| "Min net debt 1,800 MUSD" | Confirmed live. Docs elsewhere say 1,800 principal, which is slightly off. |
+| Fee goes somewhere unspecified | Minted to PCV (`0x4dDD…80Af`). The borrower gets the full requested amount and **owes the fee on top**. |
+
+---
+
+## C. Reading a position (`scripts/lib/position.ts`)
+
+Copy `scripts/lib/position.ts` into the frontend. It only needs viem. All names, argument orders and return shapes in it were taken from `mezo-org/musd` `solidity/contracts` and exercised against testnet in `13-open-trove.ts`, `14-adjust-trove.ts` and `16-check-position.ts`.
+
+### Contracts (testnet 31611)
+
+| Contract | Address |
+|---|---|
+| BorrowerOperations (proxy) | `0xCdF7028ceAB81fA0C6971208e83fa7872994beE5` |
+| TroveManager | `0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0` |
+| SortedTroves | `0x722E4D24FD6Ff8b0AC679450F3D91294607268fA` |
+| HintHelpers | `0x4e4cBA3779d56386ED43631b4dCD6d8EacEcBCF6` |
+| PriceFeed | `0x86bCF0841622a5dAC14A313a15f96A95421b9366` |
+| MUSD | `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` |
+
+### Reads
+
+| Call | Returns |
+|---|---|
+| `TroveManager.getEntireDebtAndColl(address)` | `(coll, principal, interest, pendingCollateral, pendingPrincipal, pendingInterest)`, all uint256, 18 decimals. **The first three already include the pending amounts** and interest accrued up to the current block, so do not add the pending ones again. |
+| `TroveManager.getCurrentICR(address, uint256 price)` | uint256, WAD fraction. 1.5e18 = 150%. Max uint256 if debt is 0. |
+| `TroveManager.getTroveStatus(address)` | uint8: 0 nonExistent, 1 active, 2 closedByOwner, 3 closedByLiquidation, 4 closedByRedemption |
+| `TroveManager.getTroveInterestRate(address)` | uint16 bps |
+| `TroveManager.getTroveMaxBorrowingCapacity(address)` | uint256 |
+| `TroveManager.getTCR(price)`, `checkRecoveryMode(price)` | system collateral ratio, bool |
+| `PriceFeed.fetchPrice()` | uint256, 18 decimals, USD per BTC (read $64,530 at open) |
+
+### Computing liquidation distance from on-chain data
+
+```
+debt             = principal + interest            // from getEntireDebtAndColl, includes the 200 gas comp
+ICR              = coll * price / debt
+liquidationPrice = MCR * debt / coll               // MCR = 1.1e18
+distance         = (price - liquidationPrice) / price
+```
+
+Verified: with the open trove, `getCurrentICR(borrower, liquidationPrice)` returned 1.099999999999999999e18, within 1 wei of MCR. At liquidationPrice + $1 it read 110.0023%, at − $1 109.9977% (`16-check-position.ts`). Example: liquidation price $47,295 at a price of $64,490, so a distance of 26.66%.
+
+Notes:
+
+- **Liquidation applies when `ICR < MCR` (110%).** In the source I read (`TroveManager` batch liquidation) there is no separate recovery-mode threshold for the 110% test. Recovery mode (TCR < 150%) only changes what you may open and adjust.
+- **The debt number includes the 200 MUSD gas compensation**, and liquidation price uses that full figure.
+- **Interest accrues every second**, so debt, ICR and liquidation price drift between reads. After a few minutes the interest was already 2.03e-5 MUSD. At 1% a year the liquidation price rises about 1% a year with no other change.
+- `repayToClose` in the module is `debt − 200`, which is what `closeTrove` burns from the caller.
+- Exposed as `getPosition(client, address)`. `getHints(client, coll, compositeDebt)` returns `[upper, lower]` for any open or adjust call. `collateralForIcr(compositeDebt, targetIcr, price)` sizes collateral. Write calls use the `borrowerOperationsAbi` in the same file.
+
+---
+
+## D. Adjusting and closing
+
+All adjusts below ran against the open trove. Raw data: `scripts/results/trove-adjust.json`, script `14-adjust-trove.ts`. ICR figures also move with the oracle price between reads, so small ICR changes are not only from the adjust.
+
+| Call | Result | Tx |
+|---|---|---|
+| `addColl(upper, lower)` with 0.0001 BTC | ok, collateral +0.0001 BTC | [0xb24cb8…](https://explorer.test.mezo.org/tx/0xb24cb8f269824676e7cce18059a5be6d4944c919e078fc3c101cd186fa5d81f8) |
+| `withdrawColl(0.0001 BTC, …)` | ok | [0x122d45…](https://explorer.test.mezo.org/tx/0x122d451998e38d12a1dc2ac6a5a66bebfd4ff55b2b600da823e1605b86f42688) |
+| `repayMUSD(1 MUSD, …)` | ok, debt −1, wallet −1 | [0x82219d…](https://explorer.test.mezo.org/tx/0x82219dec0cc9b56afc8fe0b2e94eaa1402b29c55ea42d8602f4c00d8d5b94d02) |
+| `withdrawMUSD(1 MUSD, …)` | ok, wallet +1, **debt +1.001** (fee 0.1% on the increase) | [0x4e964c…](https://explorer.test.mezo.org/tx/0x4e964c24efd57dabb99d892515e6a58d5a8881d1baab80bcefe2443a8827ec72) |
+| `adjustTrove(0, 1 MUSD, true, …)` with 0.00005 BTC | ok, collateral +0.00005 BTC and wallet +1 MUSD in one tx | [0x3473bb…](https://explorer.test.mezo.org/tx/0x3473bb4fe20ade2ed1808b945532277b30bd6420b6e4f8e5f04412b0215ad79b) |
+
+### Gotchas, each seen as a real revert (simulated, exact reason from the contract)
+
+1. **Repaying below the minimum is refused.** `repayMUSD(5)` on a trove with net debt about 1,801.8 reverts `BorrowerOps: Trove's net debt must be greater than minimum`. A trove cannot be partly repaid under 1,800 net debt. The only way out is `closeTrove`, which needs all of `debt − 200` in the wallet.
+2. **Collateral in and out of the same call is refused.** `adjustTrove` with both `msg.value` and a `collWithdrawal` reverts `BorrowerOperations: Cannot withdraw and add coll`.
+3. **Withdrawals that push ICR under 110% revert** with `BorrowerOps: An operation that would result in ICR < MCR is not permitted`.
+4. **Borrowing more costs the fee on the increase**, same 0.1%, added to debt and not paid from the wallet.
+5. **`closeTrove` reverts if the wallet cannot cover the debt.** Seen: `BorrowerOps: Caller doesnt have enough mUSD to make repayment`.
+6. **Hints are optional in practice but worth passing.** `getApproxHint` then `findInsertPosition` worked on all calls above, so reuse it.
+
+### Closing, and what happens if the MUSD is spent first
+
+`closeTrove` burns **`debt − 200`** from the **caller's** wallet, then refunds the 200 gas compensation from the Gas Pool and returns the collateral. The borrower never received the fee (it went to PCV) and the trove accrues interest, so **a borrower who spends everything they borrowed cannot close**:
+
+- Received at open: 1,800 MUSD. Needed to close: about 1,801.8 MUSD plus accrued interest. The gap is the fee plus interest, about 1.8 MUSD and rising.
+- On this wallet, after sending 600 MUSD to the Kiln deployer, the wallet holds about 1,205.7 MUSD (it also bought about 4.7 MUSD with BTC to cover the fee and interest, [swap 0x1a2e98…](https://explorer.test.mezo.org/tx/0x1a2e986b7bbb26b2ca4ec17fbf6f57fe22c05d732f534023569e059e3779688a)) against a close requirement of about 1,802.8. `closeTrove` simulation reverts, as listed above.
+- While the MUSD is gone the position stays open, keeps accruing 1% a year and stays exposed to liquidation below about $47.3k. **A sale refund of MUSD does not release the borrower**: they still owe the full amount plus fee plus interest. This matches the research doc and is now seen in practice.
+
+**Status: close not yet executed.** It needs about 598 MUSD returned to the test wallet. See the report message.
