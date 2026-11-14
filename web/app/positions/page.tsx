@@ -17,6 +17,8 @@ function Row({ c, onChanged }: { c: Contribution; onChanged: () => void }) {
   const claim = useTx(onChanged);
   const refund = useTx(onChanged);
   const veto = useTx(onChanged);
+  const unlock = useTx(onChanged);
+  const { address: wallet } = useWallet();
   const a = c.sale.address;
 
   return (
@@ -60,7 +62,46 @@ function Row({ c, onChanged }: { c: Contribution; onChanged: () => void }) {
         </div>
       )}
       {c.vetoed && <p className="small muted">You vetoed this release.</p>}
-      {claim.notice}{refund.notice}{veto.notice}
+      {c.stakeLocked && (
+        <div className="row between wrap">
+          <span className="small muted">
+            {c.canUnlock ? "This sale has settled. Unlock your MEZO stake so you can unstake it." : "Your MEZO stake is locked until this sale settles."}
+          </span>
+          <button
+            className="btn secondary sm"
+            disabled={!c.canUnlock || unlock.pending}
+            onClick={() => unlock.run(() => kiln.unlockStake(a, wallet as Address))}
+          >
+            {unlock.pending ? "Unlocking…" : "Unlock stake"}
+          </button>
+        </div>
+      )}
+      {claim.notice}{refund.notice}{veto.notice}{unlock.notice}
+    </div>
+  );
+}
+
+function StakeCard({ onChanged, version }: { onChanged: () => void; version: unknown }) {
+  const kiln = useKiln();
+  const { address } = useWallet();
+  const tier = useAsync(() => kiln.getMyTier(address as Address), [kiln, address, version]);
+  const unstake = useTx(() => { tier.reload(); onChanged(); });
+  const t = tier.data;
+  if (tier.error) return <ErrorState error={tier.error} onRetry={tier.reload} />;
+  if (!t) return <CardSkeleton />;
+  return (
+    <div className="glass stack" data-reveal style={{ opacity: 0 }}>
+      <div className="row between"><h2>Staked MEZO</h2><span className="badge blue">{t.name} tier</span></div>
+      <div className="stat-value">{fmtAmount(t.staked, 0)} MEZO</div>
+      {t.stakeLocked ? (
+        <p className="small muted">Locked by a sale that has not been unlocked yet. Unlock it on the contribution below, then unstake.</p>
+      ) : (
+        <p className="small muted">Nothing holds this stake, you can withdraw it.</p>
+      )}
+      {unstake.notice}
+      <button className="btn secondary" disabled={t.stakeLocked || t.staked === 0n || unstake.pending} onClick={() => unstake.run(() => kiln.unstakeMezo(t.staked))}>
+        {unstake.pending ? "Confirm in wallet…" : "Unstake all"}
+      </button>
     </div>
   );
 }
@@ -85,8 +126,16 @@ function Positions() {
           list.data?.map((c) => <Row key={c.sale.address} c={c} onChanged={list.reload} />)
         )}
       </div>
-      <div className="glass stack">
-        {position.error ? <ErrorState error={position.error} onRetry={position.reload} /> : <PositionHealth position={position.data} />}
+      <div className="stack">
+        <div className="glass stack" data-reveal style={{ opacity: 0 }}>
+          {position.error ? <ErrorState error={position.error} onRetry={position.reload} /> : <PositionHealth position={position.data} />}
+          {position.data?.active && (
+            <p className="hint">
+              Closing this position on Mezo takes slightly more MUSD than you borrowed. The 0.1% borrowing fee was added to your debt but never paid out to you, and interest accrues at 1% a year. The 200 MUSD gas compensation comes back on close.
+            </p>
+          )}
+        </div>
+        <StakeCard onChanged={list.reload} version={list.data} />
       </div>
     </div>
   );
