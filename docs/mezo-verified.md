@@ -195,3 +195,59 @@ All adjusts below ran against the open trove. Raw data: `scripts/results/trove-a
 - While the MUSD is gone the position stays open, keeps accruing 1% a year and stays exposed to liquidation below about $47.3k. **A sale refund of MUSD does not release the borrower**: they still owe the full amount plus fee plus interest. This matches the research doc and is now seen in practice.
 
 **Status: close not yet executed.** It needs about 598 MUSD returned to the test wallet. See the report message.
+
+---
+
+## E. Tokens and funding the demo wallets
+
+### Addresses and decimals (read live)
+
+| Token | Address | Decimals | Notes |
+|---|---|---|---|
+| MUSD | `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` | 18 | symbol `MUSD`, name `Mezo USD`, minted by borrowing |
+| MEZO | `0x7B7c000000000000000000000000000000000001` | 18 | symbol `MEZO`, name `MEZO`, section A |
+| BTC (ERC-20 form of native BTC) | `0x7b7C000000000000000000000000000000000000` | 18 | `approve` + Router pulled it fine ([tx](https://explorer.test.mezo.org/tx/0x403aefaea6f3f0e1601e05865a0ae0da1adb7bd30d9c69c59d93addf03a9ab90)). Native BTC is also the gas token. |
+
+### Getting each on testnet
+
+1. **Testnet BTC (needed for everything, including gas).** Faucet `https://faucet.test.mezo.org` (CAPTCHA, so a human claims it). I did not use the faucet myself, so the per-claim amount is **unverified**. The wallet was funded with 0.05 BTC by hand. Gas is negligible: opening the trove cost about 8.7e-8 BTC.
+2. **MUSD, cheapest route: swap BTC for it on the Router.** No debt, no 1,800 floor. Route `BTC → MUSD`, volatile pool `0xd16A5Df82120ED8D626a1a15232bFcE2366d6AA9`. Quotes taken from `Router.getAmountsOut` (`17-quote-funding.ts`):
+
+   | BTC in | MUSD out |
+   |---|---|
+   | 0.001 | 78.16 |
+   | 0.005 | 390.82 |
+   | 0.01 | 781.64 |
+
+   The pool prices BTC at about $78k, above the oracle's $64.5k, so a swap gives more MUSD per BTC than the trove math. Real swap: 0.00006 BTC gave 4.6899 MUSD exactly as quoted ([tx](https://explorer.test.mezo.org/tx/0x1a2e986b7bbb26b2ca4ec17fbf6f57fe22c05d732f534023569e059e3779688a)). Script: `scripts/15-buy-musd.ts <btc>` (approves the BTC token to the Router, then `swapExactTokensForTokens`).
+3. **MUSD by borrowing** (what the docs say): `openTrove`, section B. Minimum is a debt of about 1,798.2 MUSD, which needs about 0.0458 BTC at 150% ICR. That leaves a trove to manage, so use it only if a wallet needs more than the swap can give.
+4. **MEZO: swap MUSD for it** (no mint, no faucet found). Route `MUSD → MEZO`, volatile pool `0x8eb88d745B0aFFF9D71AbC40d7F550Cded7bB342`. **The pool is thin** (about 30 MUSD and 214 MEZO at last read), so price impact is steep:
+
+   | MUSD in | MEZO out |
+   |---|---|
+   | 10 | 35.5 |
+   | 50 | 96.7 |
+   | 100 | 123.2 |
+
+   Real swap from BTC through both pools: 0.0001 BTC gave 44.3125 MEZO ([tx](https://explorer.test.mezo.org/tx/0xabcd3c940362776d6ea26ecca2b40a1d8e9aff71cbdca1ed4a5e914545ce8e01)). Do not plan for more than about 120 MEZO from this pool in total without moving the price a lot. If a demo needs more, the options are to seed the pool or ask the Mezo team. Both are untested.
+5. **Bridge: not tested.** I found no testnet bridge instructions in the Mezo docs I read, and did not try one.
+6. **veMEZO and any other token:** out of scope here.
+
+### Sent to the Kiln deployer `0x3423Fe49b312706705Aaf4156Ad12027e84B9Cf5`
+
+| Asset | Amount | Tx |
+|---|---|---|
+| BTC | 0.003 | [0x7fc270…](https://explorer.test.mezo.org/tx/0x7fc270cded02164fce7cfc8fc0277ecc92f6ee8b6197643a8baae57294c4bd67) |
+| MEZO | 15 | [0x3ced07…](https://explorer.test.mezo.org/tx/0x3ced07b3e2189bd042f981a5600b35eeac3968c40c652885ee78a56f0f877ede) |
+| MUSD | 600 | [0x437538…](https://explorer.test.mezo.org/tx/0x43753836d50eb4a9cb690ef6d2e2e819f3548b46cd24e91273909d68e3d1ff20) |
+
+Balance deltas on the deployer matched the amounts exactly for each transfer (`scripts/results/transfers.json`).
+
+---
+
+## F. Open items
+
+- Close the trove (needs MUSD back, section D).
+- `openTroveWithSignature` as a plain ECDSA flow (item 5): not started.
+- Smart-account (Passport) owners for MEZO `transferFrom` and permit: not tested.
+- Bridge and the per-claim faucet amount: not tested.
