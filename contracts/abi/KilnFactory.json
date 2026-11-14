@@ -1,0 +1,429 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "raiseToken_",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "bondToken_",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "vault_",
+        "type": "address",
+        "internalType": "contract MezoTierVault"
+      },
+      {
+        "name": "b",
+        "type": "tuple",
+        "internalType": "struct KilnFactory.Bounds",
+        "components": [
+          {
+            "name": "minBond",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minDuration",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxDuration",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minTimelock",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxTimelock",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minSoftCapBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxFirstTrancheBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minVetoBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxVetoBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "bond",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract TeamBond"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "bondToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "bounds",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "minBond",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minDuration",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxDuration",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minTimelock",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxTimelock",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minSoftCapBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxFirstTrancheBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minVetoBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxVetoBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "createSale",
+    "inputs": [
+      {
+        "name": "c",
+        "type": "tuple",
+        "internalType": "struct KilnFactory.SaleConfig",
+        "components": [
+          {
+            "name": "saleToken",
+            "type": "address",
+            "internalType": "contract IERC20"
+          },
+          {
+            "name": "price",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "softCap",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "hardCap",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "start",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "end",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "firstTrancheBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "timelock",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "vetoBps",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "bondAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "sale",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isSale",
+    "inputs": [
+      {
+        "name": "sale",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "raiseToken",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "saleCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "sales",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vault",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract MezoTierVault"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "SaleCreated",
+    "inputs": [
+      {
+        "name": "sale",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "team",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "saleToken",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "price",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "softCap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "hardCap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "start",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "bondAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "BondTooSmall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DurationOutOfBounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FeeOnTransferToken",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FirstTrancheTooHigh",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidBounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SoftCapTooLow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StartInPast",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TimelockOutOfBounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VetoThresholdOutOfBounds",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
+  }
+]
