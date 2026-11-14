@@ -42,7 +42,7 @@ Planned fix: hold token claims until the timelock ends. After a veto, contributo
 
 ## Design decisions to know about
 
-- **Known issue: a veto can be profitable (see below).**
+- **Known issue: a veto can be profitable (see Known issues above).**
 - **Sale-token price rounding.** Tokens owed are `floor(contribution * unit / price)`. The sum of per-wallet floors never exceeds the floor of the total, so the sale can always pay every claim. Dust stays in the sale.
 - **Maximum sale duration.** The factory also enforces a `maxDuration`, which was not in the brief. Without it a team could set a far-future end and hold contributors' stake locked.
 - **Stake unlock is lazy.** `MezoTierVault.unlock(sale, wallet)` is public and permissionless once the sale is finalized or failed. A user who contributed must call it (or anyone can for them) before `unstake`.
