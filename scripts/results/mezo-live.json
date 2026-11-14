@@ -1,0 +1,116 @@
+{
+  "btc_approve_router": {
+    "status": "success",
+    "hash": "0x403aefaea6f3f0e1601e05865a0ae0da1adb7bd30d9c69c59d93addf03a9ab90",
+    "link": "https://explorer.test.mezo.org/tx/0x403aefaea6f3f0e1601e05865a0ae0da1adb7bd30d9c69c59d93addf03a9ab90",
+    "gasUsed": "25540",
+    "block": "16782877"
+  },
+  "swap_btc_to_mezo": {
+    "status": "success",
+    "hash": "0xabcd3c940362776d6ea26ecca2b40a1d8e9aff71cbdca1ed4a5e914545ce8e01",
+    "link": "https://explorer.test.mezo.org/tx/0xabcd3c940362776d6ea26ecca2b40a1d8e9aff71cbdca1ed4a5e914545ce8e01",
+    "gasUsed": "343804",
+    "block": "16782879"
+  },
+  "mezoBalanceAfterSwap": "44312515249752549891",
+  "deploy_Spender": {
+    "status": "success",
+    "hash": "0x373b5ac23620d7aaef1936f7b009d6dc0a4065396c8c8ced53108dcd51d35734",
+    "link": "https://explorer.test.mezo.org/tx/0x373b5ac23620d7aaef1936f7b009d6dc0a4065396c8c8ced53108dcd51d35734",
+    "gasUsed": "227616",
+    "block": "16782882",
+    "address": "0x4aa3c18ae4be74334bc53c5208865854832d7fa7"
+  },
+  "deploy_Owner": {
+    "status": "success",
+    "hash": "0xe03502c2139f8197117c5da6ca437f49ca9586d0785bf64386ce79eec49f4564",
+    "link": "https://explorer.test.mezo.org/tx/0xe03502c2139f8197117c5da6ca437f49ca9586d0785bf64386ce79eec49f4564",
+    "gasUsed": "440225",
+    "block": "16782884",
+    "address": "0x5de7a7f5046d2bf393f5b7ac229bd354f41dfa00"
+  },
+  "deploy_PermitRelay": {
+    "status": "success",
+    "hash": "0x54b0bc28341621ed63469e697bc854a4b69d396e8d1495b4cac213e5be738dde",
+    "link": "https://explorer.test.mezo.org/tx/0x54b0bc28341621ed63469e697bc854a4b69d396e8d1495b4cac213e5be738dde",
+    "gasUsed": "443653",
+    "block": "16782886",
+    "address": "0x558e36f91a47f0306f90fe51c9f0d4968bab0379"
+  },
+  "eoa_approve_contract_spender": {
+    "status": "success",
+    "hash": "0xf47982cdc7bca5c432f603335dad3b2b16439a5ef77c76699b6b3e6f9d9408e3",
+    "link": "https://explorer.test.mezo.org/tx/0xf47982cdc7bca5c432f603335dad3b2b16439a5ef77c76699b6b3e6f9d9408e3",
+    "gasUsed": "25552",
+    "block": "16782889"
+  },
+  "allowanceAfterApprove": "5000000000000000000",
+  "contract_spender_pull_from_eoa": {
+    "status": "success",
+    "hash": "0x7684568347f4ed457aa5aba81a9337a36fdcef13c274d30de2159fd1b2acd727",
+    "link": "https://explorer.test.mezo.org/tx/0x7684568347f4ed457aa5aba81a9337a36fdcef13c274d30de2159fd1b2acd727",
+    "gasUsed": "29050",
+    "block": "16782892"
+  },
+  "pullFromEoa": {
+    "recipientDelta": "5000000000000000000",
+    "allowanceAfter": "0"
+  },
+  "pullWithoutAllowance": "reverts: execution reverted",
+  "fund_owner_contract": {
+    "status": "success",
+    "hash": "0x5197a2eec8ebf7a8fa8a0f2931d6357891e4f5f0d028a52fd08447259c83f49c",
+    "link": "https://explorer.test.mezo.org/tx/0x5197a2eec8ebf7a8fa8a0f2931d6357891e4f5f0d028a52fd08447259c83f49c",
+    "gasUsed": "25540",
+    "block": "16782925"
+  },
+  "contract_owner_approve_and_pull": {
+    "status": "success",
+    "hash": "0x761a7a9adbf90f49f68185e117fb3a5244c15d9d4860410f85d0c2c8f3a3e6a5",
+    "link": "https://explorer.test.mezo.org/tx/0x761a7a9adbf90f49f68185e117fb3a5244c15d9d4860410f85d0c2c8f3a3e6a5",
+    "gasUsed": "46799",
+    "block": "16782926"
+  },
+  "contractOwnerFlow": {
+    "recipientDelta": "5000000000000000000",
+    "ownerBalAfter": "0"
+  },
+  "permitDomain": {
+    "name": "MEZO",
+    "version": "1"
+  },
+  "permit_relayed_by_contract_then_pull": {
+    "status": "success",
+    "hash": "0xba0792176fd63711d43c7dc7c98892655a7f43b34a7a83ef9a3fd5d94e5de697",
+    "link": "https://explorer.test.mezo.org/tx/0xba0792176fd63711d43c7dc7c98892655a7f43b34a7a83ef9a3fd5d94e5de697",
+    "gasUsed": "50566",
+    "block": "16782895"
+  },
+  "permitFlow": {
+    "recipientDelta": "5000000000000000000",
+    "nonceAfter": "1"
+  },
+  "mezoBalanceEnd": "29312515249752549891",
+  "contracts": {
+    "Spender": "0x4aa3c18ae4be74334bc53c5208865854832d7fa7",
+    "Owner": "0x5de7a7f5046d2bf393f5b7ac229bd354f41dfa00",
+    "PermitRelay": "0x558e36f91a47f0306f90fe51c9f0d4968bab0379"
+  },
+  "ownerContractBalAfterFunding": "5000000000000000000",
+  "approve_for_self_pull": {
+    "status": "success",
+    "hash": "0xaf2e52658549f882b2d9864002fc36ab7081f7a497cb0a059017b182636eae44",
+    "link": "https://explorer.test.mezo.org/tx/0xaf2e52658549f882b2d9864002fc36ab7081f7a497cb0a059017b182636eae44",
+    "gasUsed": "25552"
+  },
+  "contract_pulls_into_itself": {
+    "status": "success",
+    "hash": "0x7a9714123f26a935fc643aa074f286079038a0989d9ca58d8a198efb81fb21e5",
+    "link": "https://explorer.test.mezo.org/tx/0x7a9714123f26a935fc643aa074f286079038a0989d9ca58d8a198efb81fb21e5",
+    "gasUsed": "29266"
+  },
+  "selfPull": {
+    "contractBalDelta": "2000000000000000000"
+  }
+}
