@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync": "node scripts/sync-contracts.mjs",
+    "predev": "node scripts/sync-contracts.mjs",
+    "prebuild": "node scripts/sync-contracts.mjs"
   },
   "dependencies": {
     "@mezo-org/passport": "0.17.2",
