@@ -82,6 +82,8 @@ export interface Contribution {
   refunded: boolean;
   canVeto: boolean;
   vetoed: boolean;
+  /** MEZO the wallet can take from a slashed bond, 0 when none */
+  bondShare: bigint;
   /** this sale still locks the wallet's stake */
   stakeLocked: boolean;
   /** sale has settled, so the lock can be released */
@@ -91,6 +93,7 @@ export interface Contribution {
 export interface CreateSaleInput {
   name: string;
   symbol: string;
+  tagline?: string;
   saleToken: Address;
   price: bigint;
   softCap: bigint;
@@ -138,4 +141,8 @@ export interface KilnClient {
   createSale(input: CreateSaleInput): Promise<TxResult>;
   vetoRelease(sale: Address): Promise<TxResult>;
   releaseTranche(sale: Address): Promise<TxResult>;
+  /** Anyone can call. Finalizes an ended sale, or returns tokens and bond when it failed. */
+  finalizeSale(sale: Address): Promise<TxResult>;
+  /** Take the wallet's share of a slashed MEZO bond. */
+  claimBondShare(sale: Address): Promise<TxResult>;
 }

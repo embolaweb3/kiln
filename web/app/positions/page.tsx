@@ -18,6 +18,7 @@ function Row({ c, onChanged }: { c: Contribution; onChanged: () => void }) {
   const refund = useTx(onChanged);
   const veto = useTx(onChanged);
   const unlock = useTx(onChanged);
+  const bond = useTx(onChanged);
   const { address: wallet } = useWallet();
   const a = c.sale.address;
 
@@ -42,6 +43,15 @@ function Row({ c, onChanged }: { c: Contribution; onChanged: () => void }) {
         </div>
       )}
       {c.refunded && <p className="small muted">Refunded. Your Mezo debt is unchanged, repay it on Mezo to close the position.</p>}
+
+      {c.bondShare > 0n && (
+        <div className="row between wrap">
+          <span className="small muted">The team bond was slashed. Your share: <b>{fmtAmount(c.bondShare, 2)} MEZO</b></span>
+          <button className="btn sm" disabled={bond.pending} onClick={() => bond.run(() => kiln.claimBondShare(a))}>
+            {bond.pending ? "Claiming…" : "Claim bond share"}
+          </button>
+        </div>
+      )}
 
       {c.claimable > 0n && (
         <div className="row between wrap">
@@ -76,7 +86,7 @@ function Row({ c, onChanged }: { c: Contribution; onChanged: () => void }) {
           </button>
         </div>
       )}
-      {claim.notice}{refund.notice}{veto.notice}{unlock.notice}
+      {claim.notice}{refund.notice}{veto.notice}{unlock.notice}{bond.notice}
     </div>
   );
 }

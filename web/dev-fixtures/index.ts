@@ -137,6 +137,7 @@ interface Holding {
   refunded: boolean;
   vetoed: boolean;
   locked: boolean;
+  bondClaimed?: boolean;
 }
 
 const sales = new Map(seedSales().map((s) => [s.address, s]));
@@ -260,6 +261,10 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
               s.release.timelockEnd !== null &&
               s.release.timelockEnd > now(),
             vetoed: h.vetoed,
+            bondShare:
+              s.bond.status === "slashed" && !h.bondClaimed && s.raised > 0n
+                ? (s.bond.amount * h.contributed) / s.raised
+                : 0n,
             stakeLocked: h.locked,
             canUnlock: h.locked && SETTLED.has(s.state),
           },
@@ -345,6 +350,20 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
           },
         }),
       );
+      return r;
+    },
+    async claimBondShare(a) {
+      const r = await tx();
+      hold(a).bondClaimed = true;
+      return r;
+    },
+    async finalizeSale(a) {
+      const s = ensureOpen(a);
+      const r = await tx();
+      if (s.state === "ended") {
+        s.state = "finalized";
+        s.release.timelockEnd = now() + s.release.timelock;
+      }
       return r;
     },
     async vetoRelease(a) {

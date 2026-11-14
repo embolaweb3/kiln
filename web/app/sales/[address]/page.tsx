@@ -19,6 +19,7 @@ function ReleaseCard({ sale, onChanged }: { sale: Sale; onChanged: () => void })
   const { connected } = useWallet();
   const veto = useTx(onChanged);
   const release = useTx(onChanged);
+  const finalize = useTx(onChanged);
   const r = sale.release;
 
   const vetoPct = sale.raised === 0n ? 0 : Number((r.vetoWeight * 10000n) / sale.raised) / 100;
@@ -29,13 +30,32 @@ function ReleaseCard({ sale, onChanged }: { sale: Sale; onChanged: () => void })
   return (
     <div className="glass stack" data-reveal style={{ opacity: 0 }}>
       <h2>Release and veto</h2>
+      {sale.state === "ended" && (
+        <>
+          <Banner kind="info"><span>The sale ended. Anyone can finalize it, which pays the team the first tranche and opens claims.</span></Banner>
+          <button className="btn" disabled={!connected || finalize.pending} onClick={() => finalize.run(() => kiln.finalizeSale(sale.address))}>
+            {finalize.pending ? "Finalizing…" : "Finalize sale"}
+          </button>
+          {finalize.notice}
+        </>
+      )}
       {sale.state === "upcoming" || sale.state === "live" || sale.state === "ended" ? (
         <p className="muted small">
           After the sale finalizes, {r.firstTrancheBps / 100}% of the raise goes to the team. The rest stays locked for{" "}
           {fmtDuration(r.timelock)} while contributors can veto. If {threshold}% of the raise vetoes, the remainder is refunded and the bond is slashed.
         </p>
       ) : sale.state === "failed" ? (
-        <p className="muted small">The sale ended under its soft cap, so nothing is released.</p>
+        <>
+          <p className="muted small">The sale ended under its soft cap, so nothing is released. Contributors can refund.</p>
+          {sale.bond.status === "escrowed" && (
+            <>
+              <button className="btn secondary sm" disabled={!connected || finalize.pending} onClick={() => finalize.run(() => kiln.finalizeSale(sale.address))}>
+                {finalize.pending ? "Returning…" : "Return tokens and bond to the team"}
+              </button>
+              {finalize.notice}
+            </>
+          )}
+        </>
       ) : (
         <>
           <div className="row between">
