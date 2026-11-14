@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isAddress, type Address } from "viem";
 import { ConnectGate } from "@/components/connect-gate";
 import { useKiln } from "@/components/kiln-context";
 import { useTx } from "@/components/tx-button";
 import { Banner, useReveal } from "@/components/ui";
 import { fmtAmount, parseAmount } from "@/lib/format";
+import { readTokenMeta } from "@/lib/sale-meta";
 
 function toUnix(local: string): number {
   return local ? Math.floor(new Date(local).getTime() / 1000) : 0;
@@ -39,6 +40,23 @@ export default function CreateSalePage() {
     bond: "",
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const [tokenFound, setTokenFound] = useState<string | null>(null);
+
+  // pull name and symbol from the token itself so teams don't retype them
+  useEffect(() => {
+    setTokenFound(null);
+    if (!isAddress(f.token)) return;
+    let live = true;
+    readTokenMeta(f.token).then((m) => {
+      if (!live || (!m.name && !m.symbol)) return;
+      setTokenFound(`${m.name ?? ""} ${m.symbol ? `(${m.symbol})` : ""}`.trim());
+      setF((cur) => ({ ...cur, name: cur.name || m.name || "", symbol: cur.symbol || m.symbol || "" }));
+    });
+    return () => {
+      live = false;
+    };
+  }, [f.token]);
+
   const tx = useTx(() => setTimeout(() => router.push("/"), 1200));
 
   const price = parseAmount(f.price);
@@ -89,7 +107,7 @@ export default function CreateSalePage() {
               {field("name", "Name", { placeholder: "Aurora Labs" })}
               {field("symbol", "Token symbol", { placeholder: "AUR" })}
             </div>
-            {field("token", "Sale token address", { placeholder: "0x…", hint: "ERC-20 you have already deployed. Fee-on-transfer tokens are rejected." })}
+            {field("token", "Sale token address", { placeholder: "0x…", hint: tokenFound ? `Found on Mezo: ${tokenFound}` : "ERC-20 you have already deployed. Fee-on-transfer tokens are rejected." })}
           </div>
 
           <div className="glass stack" data-reveal style={{ opacity: 0 }}>
