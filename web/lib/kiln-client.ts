@@ -33,6 +33,7 @@ function createChainClient(getWallet: () => WalletClient | undefined): KilnClien
     getMyContributions: notDeployed,
     stakeMezo: notDeployed,
     unstakeMezo: notDeployed,
+    unlockStake: notDeployed,
     contribute: notDeployed,
     claim: notDeployed,
     refund: notDeployed,

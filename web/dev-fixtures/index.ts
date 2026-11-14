@@ -136,14 +136,15 @@ interface Holding {
   claimed: boolean;
   refunded: boolean;
   vetoed: boolean;
+  locked: boolean;
 }
 
 const sales = new Map(seedSales().map((s) => [s.address, s]));
 const holdings = new Map<Address, Holding>([
-  [addr(0x1001), { contributed: E(2_400), claimed: false, refunded: false, vetoed: false }],
-  [addr(0x1004), { contributed: E(1_800), claimed: false, refunded: false, vetoed: false }],
-  [addr(0x1005), { contributed: E(2_000), claimed: false, refunded: false, vetoed: true }],
-  [addr(0x1006), { contributed: E(3_000), claimed: false, refunded: false, vetoed: false }],
+  [addr(0x1001), { contributed: E(2_400), claimed: false, refunded: false, vetoed: false, locked: true }],
+  [addr(0x1004), { contributed: E(1_800), claimed: false, refunded: false, vetoed: false, locked: true }],
+  [addr(0x1005), { contributed: E(2_000), claimed: false, refunded: false, vetoed: true, locked: true }],
+  [addr(0x1006), { contributed: E(3_000), claimed: false, refunded: false, vetoed: false, locked: true }],
 ]);
 
 let staked = E(1_500);
@@ -155,6 +156,8 @@ const TIERS = [
   { name: "Silver", min: 1_000, cap: 5_000 },
   { name: "Gold", min: 5_000, cap: 15_000 },
 ] as const;
+
+const SETTLED = new Set<Sale["state"]>(["finalized", "failed", "vetoed"]);
 
 function tierFor(stakedAmount: bigint): Tier {
   const s = Number(stakedAmount) / 1e18;
@@ -169,6 +172,7 @@ function tierFor(stakedAmount: bigint): Tier {
     cap: E(TIERS[idx].cap),
     nextTierAt: next ? E(next.min) : null,
     mezoBalance: mezoBalance(),
+    stakeLocked: [...holdings.values()].some((h) => h.locked),
   };
 }
 
@@ -219,7 +223,7 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
     return s;
   };
   const hold = (a: Address) => {
-    const h = holdings.get(a) ?? { contributed: 0n, claimed: false, refunded: false, vetoed: false };
+    const h = holdings.get(a) ?? { contributed: 0n, claimed: false, refunded: false, vetoed: false, locked: false };
     holdings.set(a, h);
     return h;
   };
@@ -256,6 +260,8 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
               s.release.timelockEnd !== null &&
               s.release.timelockEnd > now(),
             vetoed: h.vetoed,
+            stakeLocked: h.locked,
+            canUnlock: h.locked && SETTLED.has(s.state),
           },
         ];
       });
@@ -266,8 +272,18 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
       return r;
     },
     async unstakeMezo(amount) {
+      if ([...holdings.values()].some((h) => h.locked)) throw new Error("Stake is locked by an unsettled sale");
       const r = await tx();
       staked = amount > staked ? 0n : staked - amount;
+      return r;
+    },
+    async unlockStake(a) {
+      const s = ensureOpen(a);
+      const h = hold(a);
+      if (!h.locked) throw new Error("Nothing locked by this sale");
+      if (!SETTLED.has(s.state)) throw new Error("Sale has not settled yet");
+      const r = await tx();
+      h.locked = false;
       return r;
     },
     async getBorrowPosition(wallet) {
@@ -288,6 +304,7 @@ export function createFixtureClient(getWallet: () => WalletClient | undefined): 
       if (s.raised + amount > s.hardCap) throw new Error("Above the hard cap");
       const r = await tx();
       h.contributed += amount;
+      h.locked = true;
       s.raised += amount;
       return r;
     },

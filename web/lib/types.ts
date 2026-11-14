@@ -49,6 +49,8 @@ export interface Tier {
   /** MEZO needed to reach the next tier, null at the top */
   nextTierAt: bigint | null;
   mezoBalance: bigint;
+  /** true while any unsettled sale holds a lock on the stake */
+  stakeLocked: boolean;
 }
 
 export type PositionHealth = "none" | "healthy" | "watch" | "danger";
@@ -80,6 +82,10 @@ export interface Contribution {
   refunded: boolean;
   canVeto: boolean;
   vetoed: boolean;
+  /** this sale still locks the wallet's stake */
+  stakeLocked: boolean;
+  /** sale has settled, so the lock can be released */
+  canUnlock: boolean;
 }
 
 export interface CreateSaleInput {
@@ -121,6 +127,8 @@ export interface KilnClient {
   getMyContributions(wallet: Address): Promise<Contribution[]>;
   stakeMezo(amount: bigint): Promise<TxResult>;
   unstakeMezo(amount: bigint): Promise<TxResult>;
+  /** vault.unlock(sale, wallet), frees the stake once the sale has settled */
+  unlockStake(sale: Address, wallet: Address): Promise<TxResult>;
   getBorrowPosition(wallet: Address): Promise<BorrowPosition>;
   /** Opens a trove on Mezo, or draws more MUSD if one is already open. */
   borrowMusd(input: { musd: bigint; collateral: bigint }): Promise<TxResult>;
