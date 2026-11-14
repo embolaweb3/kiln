@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { mezoTestnet } from "@mezo-org/passport";
 import { wagmiConfig } from "@/lib/wagmi";
+import { KilnProvider } from "./kiln-context";
+import { Shell } from "./shell";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -16,7 +18,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           initialChain={mezoTestnet}
           theme={lightTheme({ accentColor: "#1d1d1f", borderRadius: "large" })}
         >
-          {children}
+          <KilnProvider>
+            <Shell>{children}</Shell>
+          </KilnProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
