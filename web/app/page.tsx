@@ -1,69 +1,39 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useKiln } from "@/components/kiln-context";
+import { SaleCard } from "@/components/sale-card";
+import { CardSkeleton, EmptyState, ErrorState, useReveal } from "@/components/ui";
+import { useAsync } from "@/hooks/use-async";
+import Link from "next/link";
+
+export default function SalesPage() {
+  const kiln = useKiln();
+  const { data, error, loading, reload } = useAsync(() => kiln.listSales(), [kiln]);
+  const ref = useReveal<HTMLDivElement>(data);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div ref={ref}>
+      <div className="page-head">
+        <span className="eyebrow">Token sales</span>
+        <h1>Join sales without selling your BTC.</h1>
+        <p className="muted" style={{ maxWidth: 560 }}>
+          Borrow MUSD against BTC on Mezo, stake MEZO for a bigger allocation, and contribute. Every team escrows a MEZO bond.
+        </p>
+      </div>
+
+      {error ? (
+        <ErrorState error={error} onRetry={reload} />
+      ) : loading ? (
+        <div className="grid cols-2">{[0, 1, 2, 3].map((i) => <CardSkeleton key={i} />)}</div>
+      ) : data && data.length === 0 ? (
+        <EmptyState
+          title="No sales yet"
+          body="Be the first team to launch on Kiln. You escrow a MEZO bond and set the caps."
+          action={<Link href="/create" className="btn sm">Create a sale</Link>}
         />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      ) : (
+        <div className="grid cols-2">{data?.map((s) => <SaleCard key={s.address} sale={s} />)}</div>
+      )}
     </div>
   );
 }
