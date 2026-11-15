@@ -1,0 +1,148 @@
+[
+  {
+    "label": "addColl 0.0001 BTC",
+    "sent": true,
+    "status": "success",
+    "link": "https://explorer.test.mezo.org/tx/0xb24cb8f269824676e7cce18059a5be6d4944c919e078fc3c101cd186fa5d81f8",
+    "hash": "0xb24cb8f269824676e7cce18059a5be6d4944c919e078fc3c101cd186fa5d81f8",
+    "gasUsed": "371741",
+    "before": {
+      "coll": "46531594888773617",
+      "debt": "2001800057091065068641",
+      "icr": "1497873389436689122",
+      "interest": "57091065068641",
+      "musdWallet": "1200000000000000000000"
+    },
+    "after": {
+      "coll": "46631594888773617",
+      "debt": "2001800071681003919515",
+      "icr": "1502099608594419003",
+      "interest": "71681003919515",
+      "musdWallet": "1200000000000000000000"
+    }
+  },
+  {
+    "label": "withdrawColl 0.0001 BTC",
+    "sent": true,
+    "status": "success",
+    "link": "https://explorer.test.mezo.org/tx/0x122d451998e38d12a1dc2ac6a5a66bebfd4ff55b2b600da823e1605b86f42688",
+    "hash": "0x122d451998e38d12a1dc2ac6a5a66bebfd4ff55b2b600da823e1605b86f42688",
+    "gasUsed": "363417",
+    "before": {
+      "coll": "46631594888773617",
+      "debt": "2001800073584039421803",
+      "icr": "1501963428145436833",
+      "interest": "73584039421803",
+      "musdWallet": "1200000000000000000000"
+    },
+    "after": {
+      "coll": "46531594888773617",
+      "debt": "2001800080561836263526",
+      "icr": "1499713053897796601",
+      "interest": "80561836263526",
+      "musdWallet": "1200000000000000000000"
+    }
+  },
+  {
+    "label": "repayMUSD 5 (drops net debt below 1800)",
+    "reverted": true,
+    "reason": "The contract function \"repayMUSD\" reverted with the following reason: BorrowerOps: Trove's net debt must be greater than minimum"
+  },
+  {
+    "label": "repayMUSD 1",
+    "sent": true,
+    "status": "success",
+    "link": "https://explorer.test.mezo.org/tx/0x82219dec0cc9b56afc8fe0b2e94eaa1402b29c55ea42d8602f4c00d8d5b94d02",
+    "hash": "0x82219dec0cc9b56afc8fe0b2e94eaa1402b29c55ea42d8602f4c00d8d5b94d02",
+    "gasUsed": "334141",
+    "before": {
+      "coll": "46531594888773617",
+      "debt": "2001800082464871765814",
+      "icr": "1499713053897796601",
+      "interest": "82464871765814",
+      "musdWallet": "1200000000000000000000"
+    },
+    "after": {
+      "coll": "46531594888773617",
+      "debt": "2000800091979098700731",
+      "icr": "1499699861139998525",
+      "interest": "1902084925765",
+      "musdWallet": "1199000000000000000000"
+    }
+  },
+  {
+    "label": "withdrawMUSD 1 (fee applies)",
+    "sent": true,
+    "status": "success",
+    "link": "https://explorer.test.mezo.org/tx/0x4e964c24efd57dabb99d892515e6a58d5a8881d1baab80bcefe2443a8827ec72",
+    "hash": "0x4e964c24efd57dabb99d892515e6a58d5a8881d1baab80bcefe2443a8827ec72",
+    "gasUsed": "373991",
+    "before": {
+      "coll": "46531594888773617",
+      "debt": "2000800091979098700731",
+      "icr": "1499699861139998525",
+      "interest": "1902084925765",
+      "musdWallet": "1199000000000000000000"
+    },
+    "after": {
+      "coll": "46531594888773617",
+      "debt": "2001801098953410095205",
+      "icr": "1498235627491457826",
+      "interest": "8876396320239",
+      "musdWallet": "1200000000000000000000"
+    }
+  },
+  {
+    "label": "adjustTrove: addColl 0.00005 BTC + borrow 1 MUSD",
+    "sent": true,
+    "status": "success",
+    "link": "https://explorer.test.mezo.org/tx/0x3473bb4fe20ade2ed1808b945532277b30bd6420b6e4f8e5f04412b0215ad79b",
+    "hash": "0x3473bb4fe20ade2ed1808b945532277b30bd6420b6e4f8e5f04412b0215ad79b",
+    "gasUsed": "365360",
+    "before": {
+      "coll": "46531594888773617",
+      "debt": "2001801098953410095205",
+      "icr": "1498235626067141923",
+      "interest": "8876396320239",
+      "musdWallet": "1200000000000000000000"
+    },
+    "after": {
+      "coll": "46581594888773617",
+      "debt": "2002802108471130422299",
+      "icr": "1498464627598170401",
+      "interest": "18394116647333",
+      "musdWallet": "1201000000000000000000"
+    }
+  },
+  {
+    "label": "adjustTrove with both msg.value and collWithdrawal",
+    "reverted": true,
+    "reason": "The contract function \"adjustTrove\" reverted with the following reason: BorrowerOperations: Cannot withdraw and add coll"
+  },
+  {
+    "label": "withdrawColl that would push ICR under 110%",
+    "reverted": true,
+    "reason": "The contract function \"withdrawColl\" reverted with the following reason: BorrowerOps: An operation that would result in ICR < MCR is not permitted"
+  },
+  {
+    "label": "closeTrove with MUSD wallet short of debt-200",
+    "reverted": true,
+    "reason": "The contract function \"closeTrove\" reverted with the following reason: BorrowerOps: Caller doesnt have enough mUSD to make repayment"
+  },
+  {
+    "label": "final position",
+    "position": {
+      "status": "active",
+      "collateral": "46581594888773617",
+      "debt": "2002802110375118573700",
+      "principal": "2002802090077013774966",
+      "interest": "20298104798734",
+      "interestRateBps": 100,
+      "price": "64408993890000000000000",
+      "icr": "1498037996382744598",
+      "liquidationPrice": "47295124322666410263871",
+      "liquidationDistance": "265706208616785299",
+      "repayToClose": "1802802110375118573700"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "btc",
+    "amount": "0.003",
+    "to": "0x3423Fe49b312706705Aaf4156Ad12027e84B9Cf5",
+    "status": "success",
+    "hash": "0x7fc270cded02164fce7cfc8fc0277ecc92f6ee8b6197643a8baae57294c4bd67",
+    "link": "https://explorer.test.mezo.org/tx/0x7fc270cded02164fce7cfc8fc0277ecc92f6ee8b6197643a8baae57294c4bd67",
+    "deployerDelta": "3000000000000000"
+  },
+  {
+    "kind": "mezo",
+    "amount": "15",
+    "to": "0x3423Fe49b312706705Aaf4156Ad12027e84B9Cf5",
+    "status": "success",
+    "hash": "0x3ced07b3e2189bd042f981a5600b35eeac3968c40c652885ee78a56f0f877ede",
+    "link": "https://explorer.test.mezo.org/tx/0x3ced07b3e2189bd042f981a5600b35eeac3968c40c652885ee78a56f0f877ede",
+    "deployerDelta": "15000000000000000000"
+  }
+]
