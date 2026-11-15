@@ -13,6 +13,8 @@ CONTRIB_KEY_FILE="$HOME/.kiln/contributor.key"
 DOC="../docs/testnet-proof.md"
 DEP="deployments/testnet.json"
 E18=1000000000000000000
+# bash integers are 64-bit, so wei amounts are computed in python
+amt() { python3 -c "print(int($1) * 10**18)"; }
 
 jget() { python3 -c "import json,sys;d=json.load(open('$DEP'));print(eval('d'+sys.argv[1]))" "$1"; }
 FACTORY=$(jget "['KilnFactory']"); VAULT=$(jget "['MezoTierVault']"); BOND=$(jget "['TeamBond']")
@@ -109,16 +111,16 @@ mkdir -p "$(dirname "$DOC")"
 TEAM_MUSD0=$(bal "$MUSD" "$TEAM"); TEAM_MEZO0=$(bal "$MEZO" "$TEAM")
 echo "team before: MEZO=$TEAM_MEZO0 MUSD=$TEAM_MUSD0 EMBR=$(bal "$EMBR" "$TEAM") TIDE=$(bal "$TIDE" "$TEAM") BTC=$(cast balance "$TEAM" --rpc-url "$RPC" --ether)"
 
-send_btc "fund gas" "0.003 BTC for the contributor's gas" "$CONTRIB" 0.003ether
-send "$DK" "fund MUSD" team "200 MUSD to the contributor" "$MUSD" "transfer(address,uint256)" "$CONTRIB" $((200 * E18))
-send "$DK" "fund MEZO" team "2 MEZO to the contributor, to stake" "$MEZO" "transfer(address,uint256)" "$CONTRIB" $((2 * E18))
-send "$DK" "approve EMBR" team "factory may pull the 400 EMBR for sale A" "$EMBR" "approve(address,uint256)" "$FACTORY" $((400 * E18))
-send "$DK" "approve TIDE" team "factory may pull the 400 TIDE for sale B" "$TIDE" "approve(address,uint256)" "$FACTORY" $((400 * E18))
-send "$DK" "approve MEZO bond" team "factory may pull two 1 MEZO bonds" "$MEZO" "approve(address,uint256)" "$FACTORY" $((2 * E18))
+if [ "$(python3 -c "print(1 if $(cast balance "$CONTRIB" --rpc-url "$RPC") >= 2*10**15 else 0)")" = 1 ]; then echo "| fund gas | team | [\`${PRIOR_GAS_TX:0:10}…\`]($EXPLORER/tx/$PRIOR_GAS_TX) | 0.003 BTC for the contributor's gas (sent by an earlier attempt that stopped on a script bug) |" >> "$DOC"; else send_btc "fund gas" "0.003 BTC for the contributor's gas" "$CONTRIB" 0.003ether; fi
+send "$DK" "fund MUSD" team "200 MUSD to the contributor" "$MUSD" "transfer(address,uint256)" "$CONTRIB" $(amt 200)
+send "$DK" "fund MEZO" team "2 MEZO to the contributor, to stake" "$MEZO" "transfer(address,uint256)" "$CONTRIB" $(amt 2)
+send "$DK" "approve EMBR" team "factory may pull the 400 EMBR for sale A" "$EMBR" "approve(address,uint256)" "$FACTORY" $(amt 400)
+send "$DK" "approve TIDE" team "factory may pull the 400 TIDE for sale B" "$TIDE" "approve(address,uint256)" "$FACTORY" $(amt 400)
+send "$DK" "approve MEZO bond" team "factory may pull two 1 MEZO bonds" "$MEZO" "approve(address,uint256)" "$FACTORY" $(amt 2)
 
 # both sales share one window so the waits overlap
 START=$(( $(now) + 150 )); END=$(( START + 600 ))
-SOFT=$((100 * E18)); HARD=$((400 * E18)); PRICE=$E18
+SOFT=$(amt 100); HARD=$(amt 400); PRICE=$E18
 cfg() { echo "($1,$PRICE,$SOFT,$HARD,$START,$END,2500,300,2000,$E18)"; }
 CREATE_SIG="createSale((address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))"
 SALE_TOPIC=$(cast keccak "SaleCreated(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256)")
@@ -154,15 +156,15 @@ echo "sale A $SALE_A, sale B $SALE_B, window $START to $END"
 } >> "$DOC"
 
 CAP0=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
-send "$CK" "approve MEZO" contributor "vault may pull 2 MEZO" "$MEZO" "approve(address,uint256)" "$VAULT" $((2 * E18))
-send "$CK" "stake MEZO" contributor "stake 2 MEZO" "$VAULT" "stake(uint256)" $((2 * E18))
+send "$CK" "approve MEZO" contributor "vault may pull 2 MEZO" "$MEZO" "approve(address,uint256)" "$VAULT" $(amt 2)
+send "$CK" "stake MEZO" contributor "stake 2 MEZO" "$VAULT" "stake(uint256)" $(amt 2)
 CAP1=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
-send "$CK" "approve MUSD A" contributor "sale A may pull 150 MUSD" "$MUSD" "approve(address,uint256)" "$SALE_A" $((150 * E18))
-send "$CK" "approve MUSD B" contributor "sale B may pull 30 MUSD" "$MUSD" "approve(address,uint256)" "$SALE_B" $((30 * E18))
+send "$CK" "approve MUSD A" contributor "sale A may pull 150 MUSD" "$MUSD" "approve(address,uint256)" "$SALE_A" $(amt 150)
+send "$CK" "approve MUSD B" contributor "sale B may pull 30 MUSD" "$MUSD" "approve(address,uint256)" "$SALE_B" $(amt 30)
 
 echo "waiting for the sales to open"; wait_chain "$START"
-send "$CK" "contribute A" contributor "150 MUSD, above the 100 soft cap" "$SALE_A" "contribute(uint256)" $((150 * E18))
-send "$CK" "contribute B" contributor "30 MUSD, below the 100 soft cap" "$SALE_B" "contribute(uint256)" $((30 * E18))
+send "$CK" "contribute A" contributor "150 MUSD, above the 100 soft cap" "$SALE_A" "contribute(uint256)" $(amt 150)
+send "$CK" "contribute B" contributor "30 MUSD, below the 100 soft cap" "$SALE_B" "contribute(uint256)" $(amt 30)
 
 {
   echo
@@ -172,7 +174,7 @@ send "$CK" "contribute B" contributor "30 MUSD, below the 100 soft cap" "$SALE_B
   echo "- sale A raised $(fmt "$(call "$SALE_A" 'totalRaised()(uint256)')") MUSD, sale B raised $(fmt "$(call "$SALE_B" 'totalRaised()(uint256)')") MUSD"
   echo "- vault lock count for the contributor: $(call "$VAULT" 'lockCount(address)(uint256)' "$CONTRIB")"
 } >> "$DOC"
-expect_revert "unstake while contributions are live" "StakeLocked()" "$CONTRIB" "$VAULT" "unstake(uint256)" $((1 * E18))
+expect_revert "unstake while contributions are live" "StakeLocked()" "$CONTRIB" "$VAULT" "unstake(uint256)" $(amt 1)
 expect_revert "finalize sale B early" "SoftCapNotMet()" "$TEAM" "$SALE_B" "finalize()"
 
 {
@@ -191,7 +193,7 @@ send "$CK" "refund B" contributor "soft cap missed: pull the 30 MUSD back" "$SAL
 send "$DK" "reclaim B" team "sale B: the 400 TIDE and the bond go back to the team" "$SALE_B" "reclaimOnFailure()"
 send "$DK" "unlock A" team "vault frees the contributor's lock for sale A" "$VAULT" "unlock(address,address)" "$SALE_A" "$CONTRIB"
 send "$DK" "unlock B" team "vault frees the contributor's lock for sale B" "$VAULT" "unlock(address,address)" "$SALE_B" "$CONTRIB"
-send "$CK" "unstake" contributor "no locks left: withdraw the 2 MEZO" "$VAULT" "unstake(uint256)" $((2 * E18))
+send "$CK" "unstake" contributor "no locks left: withdraw the 2 MEZO" "$VAULT" "unstake(uint256)" $(amt 2)
 
 {
   echo
