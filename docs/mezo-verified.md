@@ -194,7 +194,15 @@ All adjusts below ran against the open trove. Raw data: `scripts/results/trove-a
 - On this wallet, after sending 600 MUSD to the Kiln deployer, the wallet holds about 1,205.7 MUSD (it also bought about 4.7 MUSD with BTC to cover the fee and interest, [swap 0x1a2e98…](https://explorer.test.mezo.org/tx/0x1a2e986b7bbb26b2ca4ec17fbf6f57fe22c05d732f534023569e059e3779688a)) against a close requirement of about 1,802.8. `closeTrove` simulation reverts, as listed above.
 - While the MUSD is gone the position stays open, keeps accruing 1% a year and stays exposed to liquidation below about $47.3k. **A sale refund of MUSD does not release the borrower**: they still owe the full amount plus fee plus interest. This matches the research doc and is now seen in practice.
 
-**Status: close not yet executed.** It needs about 598 MUSD returned to the test wallet. See the report message.
+**Status: trove left open on purpose, close deferred until after the submission.** The close was blocked only by the MUSD shortfall: the 600 MUSD sent to the Kiln deployer is needed for the demo sales. The close itself is not expected to be a problem. The `closeTrove` simulation fails only on the wallet-balance check (`Caller doesnt have enough mUSD to make repayment`), and every other adjust call on this trove worked. To close later, the test wallet `0x135198b57a68A0614546572Db7c40F3Fa6Aace6E` needs about 1,803 MUSD (debt minus 200, plus interest accrued by then) and returns about 0.0466 BTC of collateral. The trove is at about 150% ICR with a liquidation price near $47.3k, so it is safe unless BTC falls about 26%.
+
+### Warning for users: you owe the fee and interest on top of what you receive
+
+Borrowing does not hand you the whole debt. For a 1,800 MUSD borrow the user receives 1,800 MUSD but owes about 2,001.8 MUSD: the 1.8 MUSD fee, the 200 MUSD gas compensation (refunded on close), and interest at 1% a year that grows every second. To close, the user must hold **debt minus 200**, which is **more than they received**, by the fee plus accrued interest. So:
+
+- Spending, contributing or refunding all borrowed MUSD leaves the user unable to close. They need extra MUSD to cover the fee plus interest.
+- A refund of contributed MUSD does not cancel the debt. The trove stays open, keeps accruing interest and stays liquidatable below 110% ICR.
+- The UI should show "to close you need X MUSD" using `repayToClose` from `lib/position.ts`, and say that X is higher than the amount borrowed.
 
 ---
 
@@ -247,7 +255,7 @@ Balance deltas on the deployer matched the amounts exactly for each transfer (`s
 
 ## F. Open items
 
-- Close the trove (needs MUSD back, section D).
+- Close the trove: deferred until after the submission by choice (section D).
 - `openTroveWithSignature` as a plain ECDSA flow (item 5): not started.
 - Smart-account (Passport) owners for MEZO `transferFrom` and permit: not tested.
 - Bridge and the per-claim faucet amount: not tested.
