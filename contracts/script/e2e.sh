@@ -49,15 +49,38 @@ print(json.loads(t)[sys.argv[2]])" "$1" "$2"; }
 
 fail_row() { echo "| $1 | $2 | FAILED | ${3//$'\n'/ } |" >> "$DOC"; echo "FAILED: $1: $3" >&2; exit 1; }
 
+# Submits with --async and polls for the receipt, so a dropped receipt call can never cause a resend.
+# The submit is retried once only when no tx hash came back, i.e. nothing was submitted.
+submit() { # submit <cast send args...> -> prints the tx hash
+  local out hash
+  for attempt in 1 2; do
+    out=$(cast send --async "$@" 2>&1)
+    hash=$(echo "$out" | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)
+    [ -n "$hash" ] && { echo "$hash"; return 0; }
+    sleep 3
+  done
+  echo "$out" >&2; return 1
+}
+receipt() { # receipt <hash> -> prints receipt json once mined
+  local r
+  for i in $(seq 1 60); do
+    r=$(cast receipt "$1" --json --rpc-url "$RPC" 2>/dev/null) && [ -n "$r" ] && { echo "$r"; return 0; }
+    sleep 2
+  done
+  return 1
+}
+
 # send <key> <step> <actor> <note> <to> <sig> [args...]  -> sets LAST_TX and LAST_RECEIPT
+# steps named in SKIP_STEPS (separated by |) were already done by an earlier attempt and are skipped
 send() {
   local key="$1" step="$2" actor="$3" note="$4" to="$5" sig="$6"; shift 6
+  case "|${SKIP_STEPS:-}|" in *"|$step|"*) echo "skip: $step"; return 0;; esac
   local out hash status
-  out=$(rpc_retry cast send --json --private-key "$key" --rpc-url "$RPC" "$to" "$sig" "$@") || fail_row "$step" "$actor" "$out"
-  LAST_RECEIPT="$out"
-  hash=$(jfield "$out" transactionHash)
-  status=$(jfield "$out" status)
+  hash=$(submit --json --private-key "$key" --rpc-url "$RPC" "$to" "$sig" "$@") || fail_row "$step" "$actor" "not submitted"
   LAST_TX="$hash"
+  out=$(receipt "$hash") || fail_row "$step" "$actor" "no receipt for $hash"
+  LAST_RECEIPT="$out"
+  status=$(jfield "$out" status)
   if [ "$status" != "0x1" ] && [ "$status" != "1" ]; then
     echo "| $step | $actor | [reverted]($EXPLORER/tx/$hash) | $note |" >> "$DOC"; echo "REVERTED: $step $hash" >&2; exit 1
   fi
@@ -66,9 +89,9 @@ send() {
 }
 
 send_btc() {
-  local step="$1" note="$2" to="$3" amount="$4" out hash
-  out=$(rpc_retry cast send --json --private-key "$DK" --rpc-url "$RPC" --value "$amount" "$to") || fail_row "$step" team "$out"
-  hash=$(jfield "$out" transactionHash)
+  local step="$1" note="$2" to="$3" amount="$4" hash
+  hash=$(submit --json --private-key "$DK" --rpc-url "$RPC" --value "$amount" "$to") || fail_row "$step" team "not submitted"
+  receipt "$hash" >/dev/null || fail_row "$step" team "no receipt for $hash"
   echo "| $step | team | [\`${hash:0:10}…\`]($EXPLORER/tx/$hash) | $note |" >> "$DOC"
   echo "ok: $step $hash"
 }
@@ -168,7 +191,7 @@ if [ -n "${RESUME:-}" ]; then
   echo "resuming: sale A $SALE_A, sale B $SALE_B, window $START to $END"
 fi
 
-CAP0=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
+CAP0="${CAP0_PRE:-$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")}"
 [ -n "${SKIP_MEZO_APPROVE:-}" ] || send "$CK" "approve MEZO" contributor "vault may pull 2 MEZO" "$MEZO" "approve(address,uint256)" "$VAULT" $(amt 2)
 send "$CK" "stake MEZO" contributor "stake 2 MEZO" "$VAULT" "stake(uint256)" $(amt 2)
 CAP1=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
