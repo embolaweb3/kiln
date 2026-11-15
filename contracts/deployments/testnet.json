@@ -1,0 +1,32 @@
+{
+  "KilnFactory": "0xF2ffCF1c35A1b597932be0f2349b9c7B35Ab3ffb",
+  "MezoTierVault": "0x652c5c4637656EB18079594A7e5B0d9De7E7Faa3",
+  "TeamBond": "0x6B1cDFfa339268978bcaC8E85D69c5FC653a4C13",
+  "bounds": {
+    "maxDuration": 2592000,
+    "maxFirstTrancheBps": 5000,
+    "maxTimelock": 1209600,
+    "maxVetoBps": 5000,
+    "minBond": 1000000000000000000,
+    "minDuration": 600,
+    "minSoftCapBps": 2000,
+    "minTimelock": 300,
+    "minVetoBps": 500
+  },
+  "chainId": 31611,
+  "demoTokens": {
+    "EMBR": "0xaca1B07a18f0a6b3B96232A4F4028BaAf7c59F5f",
+    "TIDE": "0x265CeB3A2E12daB9cf795204cDABF2F52B05940d"
+  },
+  "deployBlock": 16790940,
+  "deployer": "0x3423Fe49b312706705Aaf4156Ad12027e84B9Cf5",
+  "mezo": "0x7B7c000000000000000000000000000000000001",
+  "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
+  "vaultOwner": "0x135198b57a68A0614546572Db7c40F3Fa6Aace6E",
+  "vaultParams": {
+    "absoluteMaxCap": "10000000000000000000000",
+    "baseCap": "500000000000000000000",
+    "capPerMezo": "100000000000000000000",
+    "maxCap": "5000000000000000000000"
+  }
+}
