@@ -42,6 +42,11 @@ wait_chain() { while [ "$(now)" -lt "$1" ]; do sleep 5; done; }
 fmt() { python3 -c "import sys;print(f'{int(sys.argv[1].split()[0])/1e18:g}')" "$1"; }
 bal() { fmt "$(call "$1" 'balanceOf(address)(uint256)' "$2")"; }
 
+jfield() { python3 -c "
+import json,sys
+t=sys.argv[1]; t=t[t.index('{'):t.rindex('}')+1]
+print(json.loads(t)[sys.argv[2]])" "$1" "$2"; }
+
 fail_row() { echo "| $1 | $2 | FAILED | ${3//$'\n'/ } |" >> "$DOC"; echo "FAILED: $1: $3" >&2; exit 1; }
 
 # send <key> <step> <actor> <note> <to> <sig> [args...]  -> sets LAST_TX and LAST_RECEIPT
@@ -50,8 +55,8 @@ send() {
   local out hash status
   out=$(rpc_retry cast send --json --private-key "$key" --rpc-url "$RPC" "$to" "$sig" "$@") || fail_row "$step" "$actor" "$out"
   LAST_RECEIPT="$out"
-  hash=$(python3 -c "import json,sys;print(json.loads(sys.argv[1])['transactionHash'])" "$out")
-  status=$(python3 -c "import json,sys;print(json.loads(sys.argv[1])['status'])" "$out")
+  hash=$(jfield "$out" transactionHash)
+  status=$(jfield "$out" status)
   LAST_TX="$hash"
   if [ "$status" != "0x1" ] && [ "$status" != "1" ]; then
     echo "| $step | $actor | [reverted]($EXPLORER/tx/$hash) | $note |" >> "$DOC"; echo "REVERTED: $step $hash" >&2; exit 1
@@ -63,7 +68,7 @@ send() {
 send_btc() {
   local step="$1" note="$2" to="$3" amount="$4" out hash
   out=$(rpc_retry cast send --json --private-key "$DK" --rpc-url "$RPC" --value "$amount" "$to") || fail_row "$step" team "$out"
-  hash=$(python3 -c "import json,sys;print(json.loads(sys.argv[1])['transactionHash'])" "$out")
+  hash=$(jfield "$out" transactionHash)
   echo "| $step | team | [\`${hash:0:10}…\`]($EXPLORER/tx/$hash) | $note |" >> "$DOC"
   echo "ok: $step $hash"
 }
@@ -85,6 +90,7 @@ expect_revert() {
   fi
 }
 
+if [ -z "${RESUME:-}" ]; then
 mkdir -p "$(dirname "$DOC")"
 {
   echo "# Testnet proof"
@@ -127,7 +133,7 @@ SALE_TOPIC=$(cast keccak "SaleCreated(address,address,address,uint256,uint256,ui
 sale_from_receipt() {
   python3 -c "
 import json,sys
-r=json.loads(sys.argv[1]); t=sys.argv[2].lower()
+x=sys.argv[1]; r=json.loads(x[x.index('{'):x.rindex('}')+1]); t=sys.argv[2].lower()
 for l in r['logs']:
     if l['topics'][0].lower()==t:
         print('0x'+l['topics'][1][-40:]); break" "$LAST_RECEIPT" "$SALE_TOPIC"
@@ -155,8 +161,15 @@ echo "sale A $SALE_A, sale B $SALE_B, window $START to $END"
   echo "|---|---|---|---|"
 } >> "$DOC"
 
+fi
+if [ -n "${RESUME:-}" ]; then
+  : "${SALE_A:?}" "${SALE_B:?}" "${START:?}" "${END:?}"
+  TEAM_MUSD0="${TEAM_MUSD0:?}"; TEAM_MEZO0="${TEAM_MEZO0:?}"
+  echo "resuming: sale A $SALE_A, sale B $SALE_B, window $START to $END"
+fi
+
 CAP0=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
-send "$CK" "approve MEZO" contributor "vault may pull 2 MEZO" "$MEZO" "approve(address,uint256)" "$VAULT" $(amt 2)
+[ -n "${SKIP_MEZO_APPROVE:-}" ] || send "$CK" "approve MEZO" contributor "vault may pull 2 MEZO" "$MEZO" "approve(address,uint256)" "$VAULT" $(amt 2)
 send "$CK" "stake MEZO" contributor "stake 2 MEZO" "$VAULT" "stake(uint256)" $(amt 2)
 CAP1=$(fmt "$(call "$VAULT" 'maxContribution(address)(uint256)' "$CONTRIB")")
 send "$CK" "approve MUSD A" contributor "sale A may pull 150 MUSD" "$MUSD" "approve(address,uint256)" "$SALE_A" $(amt 150)
