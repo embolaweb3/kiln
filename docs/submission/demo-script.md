@@ -1,40 +1,54 @@
 # Demo script (3:00)
 
-Order: Mezo integration, then the live testnet flow, then security. Shot details marked `[PENDING]` depend on code that is not merged yet. Do not record those parts until they work. Do not narrate anything that is not on screen.
+Order: Mezo integration, then the live testnet flow, then the security work. Everything below is in the repo or in `docs/testnet-proof.md`. Do not say anything on the "Do not claim" list.
+
+## Do not claim
+
+- The veto path ran live. It did not. It is covered by unit and invariant tests.
+- Any sale had several contributors. Both testnet sales had one.
+- Passport smart-account wallets work. They are untested.
+- Borrowing was part of the testnet sale run. The contributor was funded with MUSD by transfer.
+- Liquidity seeding, one-transaction borrow, or veMEZO gating exist. They are planned.
+- The app is hosted. It is not deployed unless that changes before recording.
 
 ## 0:00 to 0:45, Mezo integration
 
-Screen: README architecture diagram, then the contract source.
+Screen: README architecture diagram, then `Sale.sol`, `MezoTierVault.sol` and `TeamBond.sol`.
 
-- "Kiln lets BTC holders join token sales by borrowing MUSD against their BTC on Mezo. They never sell the BTC."
-- Show the diagram. "MUSD is the only sale currency. MEZO does two jobs: stake tiers set allocation, and a MEZO bond backs the team."
-- Show `BorrowerOperationsSignatures.openTroveWithSignature`. "The user owns the trove. The sale contract is only the MUSD recipient, so Kiln never holds anyone's collateral."
-- `[PENDING]` Show the Kiln sale contract calling it, and the tier gate reading veMEZO (or the fallback, say which one it is).
+- "Kiln lets BTC holders join token sales with MUSD they borrow against their BTC on Mezo. They keep the BTC."
+- Show the diagram. "MUSD is the raise token. MEZO does two jobs: staking MEZO raises a wallet's cap, and the team posts a MEZO bond."
+- Show `participate` in the app: the borrow step calls Mezo's `BorrowerOperations` directly. "The trove belongs to the contributor. Kiln never holds collateral."
+- Show `MezoTierVault.maxContribution` and `TeamBond.slash`. "If contributors veto, the bond is slashed to them."
 
 ## 0:45 to 2:15, Live testnet flow
 
-Screen: the web app on Mezo testnet (chain 31611), wallet connected. Have a funded wallet ready: testnet BTC from the faucet, and the trove state known in advance.
+Screen: `docs/testnet-proof.md` and the explorer, chain 31611. This run happened on 2026-11-15, so show it as a recorded run and not as a fresh one, unless you re-run `contracts/script/e2e.sh`.
 
-1. `[PENDING]` Connect wallet. Show the tier from MEZO stake and the contribution cap.
-2. `[PENDING]` Enter an amount. Show the trove preview: collateral, debt, fee, ICR buffer.
-3. `[PENDING]` Sign once, send one transaction (only if the one-tx borrow is merged and working, otherwise show the two steps honestly).
-4. `[PENDING]` Open the explorer link for the transaction. Show MUSD minted and the contribution recorded.
-5. `[PENDING]` Show the team bond posted and the milestone state.
-6. `[PENDING]` Only if merged: finalize, then show the pool created by the liquidity seeder.
+1. Factory and vault addresses, from the README table.
+2. Two sales created from one factory, tokens and 1 MEZO bond escrowed each.
+3. Contributor stakes 2 MEZO. Per-wallet cap goes from 500 to 700 MUSD.
+4. Contributes 150 MUSD to sale A (soft cap 100) and 30 MUSD to sale B.
+5. Early actions that revert, as designed: unstake while locked (`StakeLocked`), finalize B early (`SoftCapNotMet`), release before the timelock (`TimelockActive`).
+6. After the window: A finalizes, first tranche of 37.5 MUSD goes to the team, contributor claims 150 EMBR. B failed, so the contributor refunds 30 MUSD and the team reclaims its tokens and bond.
+7. After the timelock, A releases the remaining 112.5 MUSD and the bond goes back to the team.
+
+Say plainly: one contributor, no veto in this run.
+
+Optional, if there is time: show the app against testnet with `NEXT_PUBLIC_USE_FIXTURES=false`, reading the two real sales.
 
 ## 2:15 to 3:00, Security
 
-Screen: tests output and the notes in the README.
+Screen: terminal and `docs/security.md`.
 
-- `[PENDING]` Run `forge test` and show the pass count. Mention fuzz or invariant tests only if they exist.
-- "Refunds don't unwind debt. We say so in the UI."
-- "Each veMEZO token ID registers once, against a past snapshot, so one NFT can't be passed around or flash-lent for allocation."
-- "The bond is plain MEZO in our own escrow, because veMEZO can't be slashed."
-- `[PENDING]` Show the slash or refund path on testnet if it was run.
-- Close: repo link, and what's next (liquidity seeding, one-tx borrow, veMEZO gating once deployed).
+- Run `forge test` in `contracts/`. Expect 95 passed, 1 skipped (the fork test, which needs an RPC URL). The run takes about 35 seconds because of the invariant suite, so cut or speed up the recording.
+- "The invariant suite checks raise accounting, wallet caps, stake locked while contributing, and the bond staying put while a veto is possible. We mutation-checked it: removing each guard made an invariant fail."
+- "Slither found one real issue, a missing zero-address check. Fixed and tested."
+- "The veto path is tested, not run live."
+- "Known issue: a holder at the veto threshold can profit from vetoing, because tokens are claimable before the timelock ends. The fix is to hold claims until the timelock ends. It is written up and not in this build."
+- Close with repo link and what's next: liquidity seeding, one-transaction borrow, veMEZO gating once there is a testnet address.
 
 ## Before recording
 
-- Replace every `[PENDING]` with a real shot or delete the line.
-- Time a full run. Cut to fit 3:00.
-- Check wallet balances, faucet state and the trove status first, since one trove per address blocks a second open.
+- Open the explorer links in the proof doc and check they load.
+- If you want a live shot, re-run the end-to-end script with fresh sales. Check wallet balances and key files first.
+- Time a full run and cut to 3:00.
