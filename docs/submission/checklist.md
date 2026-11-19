@@ -1,6 +1,8 @@
 # AKINDO submission checklist
 
-**Flagged: this list is a guess at what the form asks.** The real AKINDO Mezo Buildathon form was not readable when the research was done, so check every line against the live form before submitting. Final submissions are due **2026-11-15** according to Mezo's blog. Confirm the time and timezone on AKINDO.
+**Flagged: this list is a guess at what the form asks.** The real AKINDO Mezo Buildathon form was not readable when the research was done, so check every line against the live form before submitting.
+
+**Deadline flag:** Mezo's blog gave final submissions as **2026-11-15**, and winners and the demo session as 2026-11-23. Check on AKINDO whether the window is still open or an entry was already sent, and update this file either way.
 
 ## Rules to confirm on the event page
 - [ ] Deadline and timezone
@@ -23,20 +25,22 @@
 - [ ] Pitch deck, if requested: [add]
 - [ ] Team members and contact details
 - [ ] Wallet address for prizes
-- [ ] Chain used (Mezo testnet) and deployed contract addresses
-- [ ] Explorer links to transactions
+- [x] Chain used (Mezo testnet) and deployed contract addresses: README and `contracts/deployments/testnet.json`
+- [x] Explorer links to transactions: README and `docs/testnet-proof.md`
 - [ ] "What's next" section (`submission-text.md`)
 - [ ] Any social or Discord handles
 
 ## Repo readiness
 - [ ] Repo is public and has the MIT license
-- [ ] README facts match the code (addresses, commands, features)
-- [ ] No "pending" placeholders left in README
-- [ ] Setup instructions tested on a clean clone
+- [x] README facts checked against the code and `docs/testnet-proof.md` (2026-11-19)
+- [x] No "pending" placeholders left in README
+- [ ] `<repo-url>` in the README setup section replaced with the real link
+- [ ] Setup instructions tested on a clean clone (`forge test` was run, `npm install` and `npm run dev` were not)
 - [ ] No secrets or private keys committed
 
 ## Demo readiness
-- [ ] Frontend deployed and reachable
-- [ ] Wallet funded on testnet, trove state known
-- [ ] Demo script has no `[PENDING]` lines left
+- [ ] Frontend deployed and reachable (it is not deployed today, so the live demo URL field has nothing to point at)
+- [ ] Decide what to put in a demo URL field if the form requires one
+- [ ] Wallet funded on testnet if re-running the sales
+- [x] Demo script has no `[PENDING]` lines left
 - [ ] Video recorded, uploaded, link opens when logged out
