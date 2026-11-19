@@ -80,7 +80,7 @@ None of this is in the repo.
 Prerequisites: [Foundry](https://book.getfoundry.sh/) and Node.js.
 
 ```bash
-git clone <repo-url> && cd kiln
+git clone https://github.com/embolaweb3/kiln && cd kiln
 
 # contracts
 cd contracts

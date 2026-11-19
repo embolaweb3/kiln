@@ -34,7 +34,7 @@
 - [ ] Repo is public and has the MIT license
 - [x] README facts checked against the code and `docs/testnet-proof.md` (2026-11-19)
 - [x] No "pending" placeholders left in README
-- [ ] `<repo-url>` in the README setup section replaced with the real link
+- [x] repo URL set in the README setup section
 - [ ] Setup instructions tested on a clean clone (`forge test` was run, `npm install` and `npm run dev` were not)
 - [ ] No secrets or private keys committed
 
